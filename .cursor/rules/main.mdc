@@ -1,0 +1,64 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+# ระบบร้านซ่อม (Repair Shop System)
+
+## โครงสร้างหลักของระบบ
+
+ระบบนี้แบ่งเป็น 5 แอปพลิเคชันหลัก:
+
+- **@customers**: จัดการข้อมูลลูกค้า (Customer)
+- **@inventory**: จัดการสินค้า คลัง และซัพพลายเออร์ (Product, Stock, Supplier, Purchase)
+- **@repairs**: จัดการงานซ่อมและชิ้นส่วนที่ใช้ (RepairJob, UsedPart)
+- **@sales**: จัดการการขายสินค้า (Sale, SaleItem)
+- **@dashboard**: แสดงข้อมูลสรุปและวิเคราะห์ (อยู่ระหว่างพัฒนา)
+
+## กฎการตั้งชื่อ
+
+### ราคาและต้นทุน
+- `selling_price_per_unit`: ราคาขายต่อหน่วย 
+- `cost_price_per_unit`: ต้นทุนต่อหน่วย
+- `selling_price_total`: ราคาขายรวม
+- `labor_charge`: ค่าแรง
+- `parts_selling_total`: มูลค่ารวมชิ้นส่วนตามราคาขาย
+- `parts_cost_total`: ต้นทุนรวมชิ้นส่วน
+- `total_charge`: ยอดรวมเรียกเก็บ
+
+## โครงสร้างโค้ด
+
+### Utils Functions
+- การคำนวณต้นทุนอยู่ใน `@repairs/utils/cost_calculation.py`
+- ใช้ Weighted Average สำหรับการคำนวณต้นทุนเฉลี่ย
+
+### Signals
+- อัปเดตอัตโนมัติผ่าน signals เมื่อมีการเปลี่ยนแปลงข้อมูล
+- ดูตัวอย่างได้ใน `@repairs/signals.py`
+
+## การพัฒนาในอนาคต
+
+### Dashboard
+- โมเดลหลัก: DailySummary, MonthlySummary, ProductStatistics, CustomerInsights
+- กลไกอัปเดต: Signal-based, Management Commands
+
+### ฐานข้อมูล
+- ใช้ SQLite3 สำหรับร้านซ่อมขนาดเล็ก
+- ปรับแต่งประสิทธิภาพด้วย indexes และ denormalization
+- ทำ VACUUM เป็นระยะเพื่อดูแลขนาดฐานข้อมูล
+
+## การพัฒนาระบบจนถึงปัจจุบัน
+
+- เพิ่มการคำนวณต้นทุนจริงในงานซ่อม (ใช้ cost_price_per_unit)
+- ปรับปรุงชื่อฟิลด์ให้ชัดเจนยิ่งขึ้น
+- จัดระเบียบโค้ดโดยแยกฟังก์ชันคำนวณเป็นไฟล์ utils
+- แก้ไขการแสดงชื่อ RepairJob โดยตัดข้อมูลวันที่ออก
+
+## การเรียกใช้และอ้างอิงไฟล์
+
+- โมเดลหลัก: `@inventory/models.py`, `@repairs/models.py`, `@sales/models.py`
+- ฟังก์ชันคำนวณ: `@repairs/utils/cost_calculation.py`
+- รายละเอียดโปรเจค: `@PROJECT_RULES.md` 

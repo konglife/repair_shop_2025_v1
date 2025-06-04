@@ -1,0 +1,539 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load dashboard_extras %}
+
+{% block title %}
+    หน้าหลัก Dashboard - {{ block.super }}
+{% endblock %}
+
+{% block content %}
+
+{# Updated main container with different background and spacing #}
+<div class="bg-gray-50 min-h-screen py-8 px-4 md:px-8">
+    <div class="max-w-7xl mx-auto space-y-12">
+
+        {% comment %} === Section: ข้อมูล ณ ปัจจุบัน (วันนี้) - Modernized === {% endcomment %}
+        <section>
+            <div class="flex items-center mb-6">
+                <span class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-lg flex items-center justify-center mr-4 shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </span>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">ข้อมูล ณ ปัจจุบัน (วันนี้)</h2>
+                    <p class="text-sm text-gray-500">คำนวณ ณ เวลา {{ current_date|date:"H:i" }} น. | <span class="font-medium">{{ current_date|date:"d M Y" }}</span></p>
+                </div>
+            </div>
+
+            {# Modernized Card Grid #}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                {# Card 1: รายรับรวม (Live) #}
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">รายรับรวม</h3>
+                            <span class="text-indigo-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </span>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-900 mb-3">฿{{ today_live_data.total_revenue|floatformat:0|intcomma }}</p>
+                    </div>
+                    <div class="text-xs text-gray-600 space-y-1 border-t border-gray-100 pt-3 mt-auto">
+                        <div class="flex justify-between items-center">
+                            <span>ยอดขาย:</span>
+                            <span class="font-semibold text-indigo-600">฿{{ today_live_data.total_sales_revenue|floatformat:0|intcomma }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>ยอดซ่อม:</span>
+                            <span class="font-semibold text-teal-600">฿{{ today_live_data.total_repairs_revenue|floatformat:0|intcomma }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {# Card 2: กำไรซ่อม (Live) #}
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">กำไรซ่อม</h3>
+                             <span class="text-teal-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                             </span>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-900 mb-3">฿{{ today_live_data.total_repairs_profit|floatformat:0|intcomma }}</p>
+                    </div>
+                    <div class="text-xs text-gray-500 border-t border-gray-100 pt-3 mt-auto">
+                        <div>รายรับงานซ่อม: ฿{{ today_live_data.total_repairs_revenue|floatformat:0|intcomma }}</div>
+                        <div>ต้นทุนอะไหล่รวม: ฿{{ today_live_data.total_parts_cost|floatformat:0|intcomma }}</div>
+                        <div>% กำไรงานซ่อม: {{ today_live_data.repair_profit_percent|floatformat:2 }}%</div>
+                    </div>
+                </div>
+
+                {# Card 3: จำนวนรายการ (Live) - Combined #}
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300 flex flex-col justify-between">
+                     <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">จำนวนรายการ</h3>
+                             <span class="text-amber-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 8h.01M12 16h.01" />
+                                </svg>
+                             </span>
+                        </div>
+                        <div class="flex justify-around items-center mt-4">
+                            <div class="text-center">
+                                <p class="text-3xl font-bold text-gray-900">{{ today_live_data.sales_count|intcomma }}</p>
+                                <p class="text-xs text-gray-600 mt-1">รายการขาย</p>
+                            </div>
+                            <div class="h-10 border-l border-gray-200 mx-2"></div>
+                            <div class="text-center">
+                                <p class="text-3xl font-bold text-gray-900">{{ today_live_data.repairs_completed_count|intcomma }}</p>
+                                <p class="text-xs text-gray-600 mt-1">งานซ่อมเสร็จ</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-100 pt-3 mt-4"></div> {# Spacer to align bottom #}
+                </div>
+
+                {# Card 4: Live Comparison Doughnut Chart #}
+                <div class="bg-white p-5 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-semibold text-gray-600">เปรียบเทียบรายรับ</h3>
+                        <span class="text-xs bg-blue-100 text-blue-700 font-medium py-0.5 px-2 rounded-full">Live</span>
+                    </div>
+                    <div class="relative h-36 md:h-40"> {# Adjusted height #}
+                        <canvas id="liveComparisonChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        {% comment %} === Section: ข้อมูลเมื่อวาน (สรุป) - Modernized Subtle Design === {% endcomment %}
+        <section>
+            {% if yesterday_summary %}
+                <div class="flex items-center mb-6">
+                    <span class="flex-shrink-0 w-10 h-10 bg-gray-200 text-gray-600 rounded-lg flex items-center justify-center mr-4 shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </span>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-800">ข้อมูลเมื่อวาน (สรุป)</h3>
+                        <p class="text-sm text-gray-500">สำหรับวันที่ <span class="font-medium">{{ yesterday_summary.date|date:"d M Y" }}</span> (อัปเดต: {{ yesterday_summary.updated_at|naturaltime }})</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {# Card: รายรับรวม (เมื่อวาน) - Subtle Style #}
+                    <div class="bg-white p-6 rounded-xl shadow border border-gray-100">
+                        <h4 class="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wider">รายรับรวม</h4>
+                        <p class="text-3xl font-semibold text-gray-800 mb-3">฿{{ yesterday_summary.total_revenue|floatformat:0|intcomma }}</p>
+                        <div class="text-xs text-gray-600 space-y-1 border-t border-gray-100 pt-3">
+                            <div class="flex justify-between">
+                                <span>ขาย:</span>
+                                <span class="font-medium">฿{{ yesterday_summary.total_sales_revenue|floatformat:0|intcomma }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>ซ่อม:</span>
+                                <span class="font-medium">฿{{ yesterday_summary.total_repairs_revenue|floatformat:0|intcomma }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {# Card: กำไรซ่อม (เมื่อวาน) - Subtle Style #}
+                    <div class="bg-white p-6 rounded-xl shadow border border-gray-100">
+                        <h4 class="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wider">กำไรซ่อม</h4>
+                        <p class="text-3xl font-semibold text-gray-800 mb-3">฿{{ yesterday_summary.total_repairs_profit|floatformat:0|intcomma }}</p>
+                        <p class="text-xs text-gray-500 italic border-t border-gray-100 pt-3">(รายรับซ่อม - ต้นทุนอะไหล่)</p>
+                    </div>
+                    {# Card: จำนวนรายการ (เมื่อวาน) - Subtle Style #}
+                    <div class="bg-white p-6 rounded-xl shadow border border-gray-100">
+                        <h4 class="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wider">จำนวนรายการ</h4>
+                        <div class="flex justify-around items-center pt-3">
+                            <div class="text-center">
+                                <p class="text-3xl font-semibold text-gray-800">{{ yesterday_summary.sales_count|intcomma }}</p>
+                                <p class="text-xs text-gray-600 mt-1">รายการขาย</p>
+                            </div>
+                            <div class="h-10 border-l border-gray-200 mx-4"></div>
+                            <div class="text-center">
+                                <p class="text-3xl font-semibold text-gray-800">{{ yesterday_summary.repairs_completed_count|intcomma }}</p>
+                                <p class="text-xs text-gray-600 mt-1">งานซ่อมเสร็จ</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center text-gray-500 text-sm py-12 bg-white rounded-xl border border-dashed border-gray-300 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    ยังไม่มีข้อมูลสรุปสำหรับเมื่อวาน ({{ current_date|add_days:-1|date:"d M Y" }})
+                    <p class="text-xs mt-1">ระบบจะคำนวณอัตโนมัติหลังเที่ยงคืน</p>
+                </div>
+            {% endif %}
+        </section>
+
+        {% comment %} === Section: ข้อมูลรายละเอียดเพิ่มเติม === {% endcomment %}
+        <section class="mt-12">
+            {% include 'dashboard/detailed_metrics.html' %}
+        </section>
+
+        {% comment %} === Section: กราฟแนวโน้มรายวัน - Modernized === {% endcomment %}
+        <section>
+            <div class="flex items-center mb-6">
+                <span class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-green-400 to-teal-500 text-white rounded-lg flex items-center justify-center mr-4 shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                </span>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">แนวโน้มข้อมูลย้อนหลัง 7 วัน</h2>
+                    <p class="text-sm text-gray-500">ข้อมูลสรุปจาก DailySummary</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {# Card for Revenue Trend Chart #}
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <h3 class="text-base font-semibold text-gray-700 mb-4">แนวโน้มรายรับรวม</h3>
+                    <div class="relative h-72"> {# Adjusted height #}
+                        <canvas id="revenueTrendChart"></canvas>
+                    </div>
+                </div>
+
+                {# Card for Profit Trend Chart #}
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <h3 class="text-base font-semibold text-gray-700 mb-4">แนวโน้มกำไรซ่อม</h3>
+                    <div class="relative h-72"> {# Adjusted height #}
+                        <canvas id="profitTrendChart"></canvas>
+                    </div>
+                </div>
+
+                {# Card for Item Count Trend Chart #}
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <h3 class="text-base font-semibold text-gray-700 mb-4">แนวโน้มจำนวนรายการ</h3>
+                    <div class="relative h-72"> {# Adjusted height #}
+                        <canvas id="itemCountChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+{# Use json_script to safely pass data to JavaScript #}
+{{ chart_labels|json_script:"chart_labels" }}
+{{ chart_revenue_data|json_script:"chart_revenue_data" }}
+{{ chart_profit_data|json_script:"chart_profit_data" }}
+{{ chart_sales_count_data|json_script:"chart_sales_count_data" }}
+{{ chart_repairs_count_data|json_script:"chart_repairs_count_data" }}
+{{ today_live_data.total_sales_revenue|default:0|json_script:"live_sales_revenue" }}
+{{ today_live_data.total_repairs_revenue|default:0|json_script:"live_repairs_revenue" }}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Safely Parse Data from Django ---
+        const labels = JSON.parse(document.getElementById('chart_labels').textContent);
+        const revenueData = JSON.parse(document.getElementById('chart_revenue_data').textContent);
+        const profitData = JSON.parse(document.getElementById('chart_profit_data').textContent);
+        const salesCountData = JSON.parse(document.getElementById('chart_sales_count_data').textContent);
+        const repairsCountData = JSON.parse(document.getElementById('chart_repairs_count_data').textContent);
+        const liveSalesRevenue = JSON.parse(document.getElementById('live_sales_revenue').textContent);
+        const liveRepairsRevenue = JSON.parse(document.getElementById('live_repairs_revenue').textContent);
+
+        // --- Chart.js Global Defaults --- Modernized
+        Chart.defaults.font.family = '"IBM Plex Sans Thai", "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif'; // Added Thai font
+        Chart.defaults.font.size = 12;
+        Chart.defaults.color = '#4b5563'; // Default text color (gray-600)
+        Chart.defaults.maintainAspectRatio = false;
+        Chart.defaults.responsive = true;
+
+        // Tooltip Defaults
+        Chart.defaults.plugins.tooltip.enabled = true;
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(0, 0, 0, 0.75)'; // Slightly transparent black
+        Chart.defaults.plugins.tooltip.titleColor = '#ffffff';
+        Chart.defaults.plugins.tooltip.bodyColor = '#e5e7eb'; // gray-200
+        Chart.defaults.plugins.tooltip.titleFont = { weight: '600', size: 13 };
+        Chart.defaults.plugins.tooltip.bodyFont = { size: 12 };
+        Chart.defaults.plugins.tooltip.padding = 10;
+        Chart.defaults.plugins.tooltip.cornerRadius = 4;
+        Chart.defaults.plugins.tooltip.boxPadding = 4;
+        Chart.defaults.plugins.tooltip.usePointStyle = true;
+
+        // Legend Defaults
+        Chart.defaults.plugins.legend.position = 'bottom';
+        Chart.defaults.plugins.legend.align = 'center';
+        Chart.defaults.plugins.legend.labels.color = '#4b5563'; // gray-600
+        Chart.defaults.plugins.legend.labels.usePointStyle = true;
+        Chart.defaults.plugins.legend.labels.pointStyle = 'rectRounded';
+        Chart.defaults.plugins.legend.labels.boxWidth = 12;
+        Chart.defaults.plugins.legend.labels.boxHeight = 12;
+        Chart.defaults.plugins.legend.labels.padding = 20;
+
+        // Helper functions
+        const formatCurrency = (value) => '฿' + value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        const formatCount = (value) => value.toLocaleString();
+
+        // --- Live Comparison Doughnut Chart --- Modernized
+        const liveCtx = document.getElementById('liveComparisonChart')?.getContext('2d');
+        if (liveCtx) {
+            new Chart(liveCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['ยอดขาย', 'ยอดซ่อม'],
+                    datasets: [{
+                        data: [liveSalesRevenue, liveRepairsRevenue],
+                        backgroundColor: [
+                            '#4f46e5',  // Indigo-600
+                            '#0d9488'   // Teal-600
+                        ],
+                        borderColor: '#ffffff',
+                        borderWidth: 2,
+                        hoverOffset: 8,
+                        hoverBorderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    cutout: '70%', // Make the doughnut thinner
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: { size: 11 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
+                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                    return `${context.label}: ${formatCurrency(value)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Common Chart Options for Line Trends --- Modernized
+        const commonLineOptions = {
+            interaction: {
+                intersect: false,
+                mode: 'index',
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                         color: '#6b7280', // gray-500
+                         font: { size: 11 }
+                    },
+                    border: {
+                        color: '#e5e7eb' // gray-200
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#f3f4f6', // Lighter grid lines (gray-100)
+                        drawBorder: false,
+                        // Adding dashed lines for y-axis grid
+                        borderDash: [5, 5],
+                    },
+                    ticks: {
+                        color: '#6b7280', // gray-500
+                        font: { size: 11 },
+                        padding: 10,
+                        // Formatting is defined per chart instance
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    // Formatting is defined per chart instance
+                },
+                legend: {
+                    // Options defined per chart instance
+                }
+            },
+            elements: {
+                line: {
+                    tension: 0.35, // Slightly smoother curves
+                    borderWidth: 2.5
+                },
+                point: {
+                    radius: 0, // Hide points by default
+                    hoverRadius: 6,
+                    hitRadius: 10
+                }
+            }
+        };
+
+        // --- Revenue Trend Chart --- Modernized
+        const revenueCtx = document.getElementById('revenueTrendChart')?.getContext('2d');
+        if (revenueCtx) {
+            new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'รายรับรวม',
+                        data: revenueData,
+                        borderColor: '#4f46e5', // Indigo-600
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)', // Slightly more visible fill
+                        fill: true,
+                        pointBackgroundColor: '#4f46e5',
+                        pointBorderColor: '#ffffff',
+                        pointHoverBackgroundColor: '#ffffff',
+                        pointHoverBorderColor: '#4f46e5'
+                    }]
+                },
+                options: {
+                    ...commonLineOptions,
+                    scales: {
+                        ...commonLineOptions.scales,
+                        y: {
+                            ...commonLineOptions.scales.y,
+                            ticks: {
+                                ...commonLineOptions.scales.y.ticks,
+                                callback: (value) => formatCurrency(value)
+                            }
+                        }
+                    },
+                    plugins: {
+                        ...commonLineOptions.plugins,
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Profit Trend Chart --- Modernized
+        const profitCtx = document.getElementById('profitTrendChart')?.getContext('2d');
+        if (profitCtx) {
+            new Chart(profitCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'กำไรซ่อม',
+                        data: profitData,
+                        borderColor: '#0d9488', // Teal-600
+                        backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                        fill: true,
+                        pointBackgroundColor: '#0d9488',
+                        pointBorderColor: '#ffffff',
+                        pointHoverBackgroundColor: '#ffffff',
+                        pointHoverBorderColor: '#0d9488'
+                    }]
+                },
+                options: {
+                    ...commonLineOptions,
+                    scales: {
+                        ...commonLineOptions.scales,
+                        y: {
+                            ...commonLineOptions.scales.y,
+                            ticks: {
+                                ...commonLineOptions.scales.y.ticks,
+                                callback: (value) => formatCurrency(value)
+                            }
+                        }
+                    },
+                    plugins: {
+                        ...commonLineOptions.plugins,
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Item Count Trend Chart --- Modernized
+        const itemCountCtx = document.getElementById('itemCountChart')?.getContext('2d');
+        if (itemCountCtx) {
+            new Chart(itemCountCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'รายการขาย',
+                            data: salesCountData,
+                            borderColor: '#d97706', // Amber-600
+                            backgroundColor: 'rgba(217, 119, 6, 0.1)',
+                            fill: true,
+                            pointBackgroundColor: '#d97706',
+                            pointBorderColor: '#ffffff',
+                            pointHoverBackgroundColor: '#ffffff',
+                            pointHoverBorderColor: '#d97706',
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'งานซ่อมเสร็จ',
+                            data: repairsCountData,
+                            borderColor: '#64748b', // Slate-500 (changed from gray)
+                            backgroundColor: 'rgba(100, 116, 139, 0.1)',
+                            fill: true,
+                            pointBackgroundColor: '#64748b',
+                            pointBorderColor: '#ffffff',
+                            pointHoverBackgroundColor: '#ffffff',
+                            pointHoverBorderColor: '#64748b',
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    ...commonLineOptions,
+                    scales: {
+                        ...commonLineOptions.scales,
+                        y: {
+                            ...commonLineOptions.scales.y,
+                            ticks: {
+                                ...commonLineOptions.scales.y.ticks,
+                                callback: (value) => formatCount(value),
+                                stepSize: Math.max(1, Math.ceil(Math.max(...salesCountData, ...repairsCountData) / 5)) // Dynamic step size
+                            }
+                        }
+                    },
+                    plugins: {
+                        ...commonLineOptions.plugins,
+                        legend: {
+                            ...Chart.defaults.plugins.legend,
+                            display: true
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.dataset.label}: ${formatCount(context.parsed.y)}`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+    });
+</script>
+{% endblock extra_js %}

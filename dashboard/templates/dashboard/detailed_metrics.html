@@ -1,0 +1,58 @@
+{% load humanize %}
+<!-- ข้อมูลรายละเอียดเพิ่มเติม (partial) -->
+<div class="bg-white rounded-xl shadow-md p-6 mb-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        ข้อมูลรายละเอียดเพิ่มเติม
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- รายละเอียดวันนี้ -->
+        <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+            <h4 class="font-medium text-indigo-700 mb-2">วันนี้ ({{ today_live_data.date|date:"d M Y" }})</h4>
+            <div class="space-y-1 text-sm text-gray-700">
+                <div>รายรับรวม: <span class="font-semibold text-gray-900">฿{{ today_live_data.total_revenue|floatformat:2|intcomma }}</span></div>
+                <div>กำไรรวม: <span class="font-semibold text-green-600">฿{{ today_live_data.total_profit|floatformat:2|intcomma }}</span></div>
+                <div>รายรับจากการขาย: ฿{{ today_live_data.total_sales_revenue|floatformat:2|intcomma }}</div>
+                <div>ต้นทุนการขาย: ฿{{ today_live_data.total_sales_cost|floatformat:2|intcomma }}</div>
+                <div>กำไรจากการขาย: ฿{{ today_live_data.total_sales_profit|floatformat:2|intcomma }}</div>
+                <div>รายรับจากงานซ่อม: ฿{{ today_live_data.total_repairs_revenue|floatformat:2|intcomma }}</div>
+                <div>ต้นทุนอะไหล่รวม: ฿{{ today_live_data.total_parts_cost|floatformat:2|intcomma }}</div>
+                <div>กำไรจากงานซ่อม: <span class="font-semibold text-teal-600">฿{{ today_live_data.total_repairs_profit|floatformat:2|intcomma }}</span></div>
+                <div>% กำไรงานซ่อม: <span class="font-semibold">{{ today_live_data.repair_profit_percent|floatformat:2 }}%</span></div>
+                <div class="mt-2 font-medium text-gray-800">Top 5 งานซ่อมที่ทำบ่อย/ทำเงินสูงสุด:</div>
+                <ul class="list-disc list-inside ml-2">
+                    {% for job in today_live_data.top_repairs %}
+                    <li>{{ job.name }} <span class="text-xs text-gray-500">({{ job.count }} ครั้ง, ฿{{ job.amount|floatformat:2|intcomma }})</span></li>
+                    {% empty %}
+                    <li>ไม่มีข้อมูล</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <!-- รายละเอียดเมื่อวาน -->
+        <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+            <h4 class="font-medium text-indigo-700 mb-2">เมื่อวาน ({{ yesterday_summary.date|date:"d M Y" }})</h4>
+            <div class="space-y-1 text-sm text-gray-700">
+                <div>รายรับรวม: <span class="font-semibold text-gray-900">฿{{ yesterday_summary.total_revenue|floatformat:2|intcomma }}</span></div>
+                <div>กำไรรวม: <span class="font-semibold text-green-600">฿{{ yesterday_summary.total_profit|floatformat:2|intcomma }}</span></div>
+                <div>รายรับจากการขาย: ฿{{ yesterday_summary.total_sales_revenue|floatformat:2|intcomma }}</div>
+                <div>ต้นทุนการขาย: ฿{{ yesterday_summary.total_sales_cost|floatformat:2|intcomma }}</div>
+                <div>กำไรจากการขาย: ฿{{ yesterday_summary.total_sales_profit|floatformat:2|intcomma }}</div>
+                <div>รายรับจากงานซ่อม: ฿{{ yesterday_summary.total_repairs_revenue|floatformat:2|intcomma }}</div>
+                <div>ต้นทุนอะไหล่รวม: ฿{{ yesterday_summary.total_parts_cost|floatformat:2|intcomma }}</div>
+                <div>กำไรจากงานซ่อม: <span class="font-semibold text-teal-600">฿{{ yesterday_summary.total_repairs_profit|floatformat:2|intcomma }}</span></div>
+                <div>% กำไรงานซ่อม: <span class="font-semibold">{{ yesterday_summary.repair_profit_percent|floatformat:2 }}%</span></div>
+                <div class="mt-2 font-medium text-gray-800">Top 5 งานซ่อมที่ทำบ่อย/ทำเงินสูงสุด:</div>
+                <ul class="list-disc list-inside ml-2">
+                    {% for job in yesterday_summary.top_repairs %}
+                    <li>{{ job.name }} <span class="text-xs text-gray-500">({{ job.count }} ครั้ง, ฿{{ job.amount|floatformat:2|intcomma }})</span></li>
+                    {% empty %}
+                    <li>ไม่มีข้อมูล</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

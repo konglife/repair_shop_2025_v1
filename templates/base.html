@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Repair Shop Dashboard{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script> {% comment %} Tailwind CSS CDN {% endcomment %}
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-blue-600 text-white p-4 shadow-md">
+        <div class="container mx-auto">
+            <h1 class="text-xl font-semibold">Repair Shop Dashboard</h1>
+            {% comment %} เพิ่มเมนูนำทางอื่นๆ ที่นี่ในอนาคต {% endcomment %}
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-4 mt-4">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="text-center text-gray-500 mt-8 pb-4">
+        <p>&copy; {% now "Y" %} Repair Shop System</p>
+    </footer>
+
+    {# Font Awesome (ถ้าใช้) #}
+    {# <script src="https://kit.fontawesome.com/YOUR_KIT_ID.js" crossorigin="anonymous"></script> #}
+
+    {# Chart.js CDN #}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    {# Alpine.js (ถ้าใช้) #}
+    {# <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script> #}
+
+    {% block extra_js %}
+    {# พื้นที่สำหรับ JS เพิ่มเติมในแต่ละหน้า #}
+    {% endblock extra_js %}
+</body>
+</html> 

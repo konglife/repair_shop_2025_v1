@@ -1,0 +1,47 @@
+# Python
+# Ignore virtual environment directories
+venv/
+env/
+.venv/
+
+# Ignore compiled Python files
+*.pyc
+__pycache__/
+
+# Ignore editor/IDE specific files
+.vscode/
+.idea/
+*.swp
+*.bak
+
+# Ignore common log and temporary files
+*.log
+*.tmp
+*.temp
+
+# Ignore database files
+*.sqlite3
+db.sqlite3
+
+# Ignore media uploads (uncomment if you want to ignore the media folder)
+# media/
+
+# Ignore build artifacts and distribution files
+build/
+dist/
+*.egg-info/
+
+# Ignore test-related files
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ignore pip-related files
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Ignore miscellaneous files
+*.zip
+*.tar.gz
+*.rar
+*.DS_Store

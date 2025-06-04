@@ -1,0 +1,147 @@
+าา<!-- Components/partial สำหรับแสดงข้อมูลเปรียบเทียบกับวันก่อนหน้า -->
+<div class="bg-white rounded-xl shadow-md p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            เปรียบเทียบกับเมื่อวาน
+        </h3>
+    </div>
+
+    {% if comparison_data %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- รายรับรวม -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="text-sm text-gray-500 mb-1">รายรับรวม</div>
+                <div class="flex items-center">
+                    <div class="text-xl font-semibold {% if comparison_data.revenue_change_percent > 0 %}text-green-600{% elif comparison_data.revenue_change_percent < 0 %}text-red-600{% else %}text-gray-700{% endif %}">
+                        {% if comparison_data.revenue_change_percent %}
+                            {{ comparison_data.revenue_change_percent|floatformat:1 }}%
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                    {% if comparison_data.revenue_change_percent > 0 %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                    {% elif comparison_data.revenue_change_percent < 0 %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+                        </svg>
+                    {% endif %}
+                </div>
+                <div class="text-sm text-gray-500 mt-1">
+                    {% if comparison_data.revenue_change > 0 %}
+                        เพิ่มขึ้น ฿{{ comparison_data.revenue_change|floatformat:0|intcomma }}
+                    {% elif comparison_data.revenue_change < 0 %}
+                        ลดลง ฿{{ comparison_data.revenue_change|abs|floatformat:0|intcomma }}
+                    {% else %}
+                        ไม่เปลี่ยนแปลง
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- กำไรรวม -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="text-sm text-gray-500 mb-1">กำไรรวม</div>
+                <div class="flex items-center">
+                    <div class="text-xl font-semibold {% if comparison_data.profit_change_percent > 0 %}text-green-600{% elif comparison_data.profit_change_percent < 0 %}text-red-600{% else %}text-gray-700{% endif %}">
+                        {% if comparison_data.profit_change_percent %}
+                            {{ comparison_data.profit_change_percent|floatformat:1 }}%
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                    {% if comparison_data.profit_change_percent > 0 %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                    {% elif comparison_data.profit_change_percent < 0 %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+                        </svg>
+                    {% endif %}
+                </div>
+                <div class="text-sm text-gray-500 mt-1">
+                    {% if comparison_data.profit_change > 0 %}
+                        เพิ่มขึ้น ฿{{ comparison_data.profit_change|floatformat:0|intcomma }}
+                    {% elif comparison_data.profit_change < 0 %}
+                        ลดลง ฿{{ comparison_data.profit_change|abs|floatformat:0|intcomma }}
+                    {% else %}
+                        ไม่เปลี่ยนแปลง
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- จำนวนการขาย -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="text-sm text-gray-500 mb-1">จำนวนการขาย</div>
+                <div class="flex items-center">
+                    <div class="text-xl font-semibold {% if comparison_data.sales_count_change_percent > 0 %}text-green-600{% elif comparison_data.sales_count_change_percent < 0 %}text-red-600{% else %}text-gray-700{% endif %}">
+                        {% if comparison_data.sales_count_change_percent %}
+                            {{ comparison_data.sales_count_change_percent|floatformat:1 }}%
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                    {% if comparison_data.sales_count_change_percent > 0 %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                    {% elif comparison_data.sales_count_change_percent < 0 %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+                        </svg>
+                    {% endif %}
+                </div>
+                <div class="text-sm text-gray-500 mt-1">
+                    {% if comparison_data.sales_count_change > 0 %}
+                        เพิ่มขึ้น {{ comparison_data.sales_count_change }} รายการ
+                    {% elif comparison_data.sales_count_change < 0 %}
+                        ลดลง {{ comparison_data.sales_count_change|abs }} รายการ
+                    {% else %}
+                        ไม่เปลี่ยนแปลง
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- จำนวนงานซ่อม -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="text-sm text-gray-500 mb-1">จำนวนงานซ่อม</div>
+                <div class="flex items-center">
+                    <div class="text-xl font-semibold {% if comparison_data.repairs_count_change_percent > 0 %}text-green-600{% elif comparison_data.repairs_count_change_percent < 0 %}text-red-600{% else %}text-gray-700{% endif %}">
+                        {% if comparison_data.repairs_count_change_percent %}
+                            {{ comparison_data.repairs_count_change_percent|floatformat:1 }}%
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                    {% if comparison_data.repairs_count_change_percent > 0 %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                    {% elif comparison_data.repairs_count_change_percent < 0 %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+                        </svg>
+                    {% endif %}
+                </div>
+                <div class="text-sm text-gray-500 mt-1">
+                    {% if comparison_data.repairs_count_change > 0 %}
+                        เพิ่มขึ้น {{ comparison_data.repairs_count_change }} งาน
+                    {% elif comparison_data.repairs_count_change < 0 %}
+                        ลดลง {{ comparison_data.repairs_count_change|abs }} งาน
+                    {% else %}
+                        ไม่เปลี่ยนแปลง
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="p-4 text-center text-gray-500 bg-gray-50 rounded-lg">
+            <p>ไม่มีข้อมูลเมื่อวานสำหรับการเปรียบเทียบ</p>
+        </div>
+    {% endif %}
+</div> 
