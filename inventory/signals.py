@@ -3,7 +3,6 @@ from django.dispatch import receiver
 from .models import Purchase, Stock
 from django.utils import timezone
 from decimal import Decimal
-from django.db import transaction
 
 # Helper function for updating stock status
 def update_stock_status(stock):

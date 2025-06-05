@@ -5,4 +5,5 @@ class InventoryConfig(AppConfig):
     name = 'inventory'
 
     def ready(self):
-        import inventory.signals  # ทำการเชื่อมต่อ Signal
+        # Import signals to ensure signal handlers are registered
+        __import__('inventory.signals')
