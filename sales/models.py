@@ -18,21 +18,7 @@ class SaleItem(models.Model):
         # ดึงราคาจาก Product อัตโนมัติ
         self.price = self.product.selling_price
 
-        # ดึงข้อมูลเก่าเพื่อคำนวณความแตกต่างในจำนวนที่เปลี่ยนแปลง
-        old_quantity = 0
-        if self.pk:
-            old_item = SaleItem.objects.get(pk=self.pk)
-            old_quantity = old_item.quantity
-
         super(SaleItem, self).save(*args, **kwargs)
-
-
-
-
-
-    def delete(self, *args, **kwargs):
-        super(SaleItem, self).delete(*args, **kwargs)
-
 
 
     def __str__(self):
@@ -59,9 +45,6 @@ class Sale(models.Model):
         total = sum(item.total_price for item in self.items.all())
         self.total_amount = total
         return total
-
-    def save(self, *args, **kwargs):
-        super(Sale, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         # คืนจำนวนสินค้าในสต็อกก่อนที่จะลบการขาย

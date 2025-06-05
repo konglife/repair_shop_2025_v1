@@ -2,7 +2,6 @@
 from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
 from .models import SaleItem, Sale
-from inventory.models import Stock # Import Stock model
 
 @receiver(pre_save, sender=SaleItem)
 def pre_save_sale_item_quantity(sender, instance, **kwargs):
