@@ -115,7 +115,10 @@ def edit_customer(request, pk):
 
 # ฟังก์ชันลบลูกค้า
 @login_required
+@csrf_exempt
 def delete_customer(request, pk):
+    if request.method != 'POST':
+        return JsonResponse({'message': 'Please use POST method'}, status=405)
     customer = get_object_or_404(Customer, pk=pk)
     customer.delete()
     return JsonResponse({
