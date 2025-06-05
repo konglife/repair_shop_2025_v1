@@ -1,6 +1,6 @@
 # inventory/views.py
 from django.shortcuts import get_object_or_404
-from .models import Product, Supplier, Stock, Purchase, Category
+from .models import Product, Stock, Purchase, Category
 from .forms import SupplierForm, PurchaseForm
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -20,7 +20,7 @@ def product_list(request):
 
     # Prefetch stocks เพื่อดึง current_stock
     products = Product.objects.prefetch_related(
-        Prefetch('stocks', queryset=Stock.objects.all(), to_attr='all_stocks')
+        Prefetch('stocks', queryset=Stock.objects.all(), to_attr='prefetched_stocks')
     )
 
     if query:
@@ -35,13 +35,18 @@ def product_list(request):
 
     product_list = []
     for product in page_obj:
+        stock = None
+        if hasattr(product, 'prefetched_stocks') and product.prefetched_stocks:
+            stock = product.prefetched_stocks[0]
+        current_stock = stock.current_stock if stock else 0
+
         product_list.append({
             'id': product.id,
             'name': product.name,
             'description': product.description,
-            'price': float(product.price) if product.price else 0,
+            'price': float(product.selling_price) if product.selling_price else 0,
             'category': product.category.name if product.category else None,
-            'current_stock': product.current_stock if hasattr(product, 'current_stock') else 0
+            'current_stock': current_stock,
         })
 
     categories = list(Category.objects.values('id', 'name'))
@@ -56,20 +61,20 @@ def product_list(request):
 @login_required
 def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
-    stock = product.stock if hasattr(product, 'stock') else None
+    stock = product.stocks.first()
     
     stock_data = None
     if stock:
         stock_data = {
-            'quantity': stock.quantity,
-            'last_updated': stock.last_updated.isoformat() if stock.last_updated else None
+            'quantity': stock.current_stock,
+            'last_updated': stock.last_updated_at.isoformat() if stock.last_updated_at else None,
         }
     
     return JsonResponse({
         'id': product.id,
         'name': product.name,
         'description': product.description,
-        'price': float(product.price) if product.price else 0,
+        'price': float(product.selling_price) if product.selling_price else 0,
         'category': product.category.name if product.category else None,
         'stock': stock_data
     })
