@@ -5,5 +5,5 @@ from . import views
 app_name = 'sales'
 
 urlpatterns = [
-    path('', views.index, name='index'),  # หน้าแรกของแอป inventory
+    path('', views.index, name='index'),  # หน้าแรกของแอป sales
 ]
