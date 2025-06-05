@@ -1,5 +1,5 @@
 from decimal import Decimal
-from django.db.models import Sum, F, DecimalField, ExpressionWrapper
+
 
 def calculate_historical_weighted_average_cost(product):
     """
@@ -22,7 +22,10 @@ def calculate_historical_weighted_average_cost(product):
     if not purchases.exists():
         return Decimal('0.00')
         
-    total_value = sum(purchase.quantity * purchase.price for purchase in purchases)
+    total_value = sum(
+        purchase.quantity * (purchase.price or Decimal('0.00'))
+        for purchase in purchases
+    )
     total_quantity = sum(purchase.quantity for purchase in purchases)
     
     if total_quantity == 0:
