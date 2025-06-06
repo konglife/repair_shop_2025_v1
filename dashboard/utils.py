@@ -1,4 +1,4 @@
-from django.db.models import Sum, Count, F, Q, Avg, DecimalField
+from django.db.models import Sum, Count, F, Q, Avg, DecimalField, IntegerField
 from django.db.models.functions import Coalesce
 from datetime import timedelta
 from django.utils import timezone
@@ -7,7 +7,7 @@ from decimal import Decimal
 from sales.models import Sale, SaleItem
 from repairs.models import RepairJob
 from inventory.models import Product
-from dashboard.models import DailySummary
+from dashboard.models import DailySummary, MonthlySummary
 
 def calculate_daily_sales_metrics(date):
     """
@@ -24,8 +24,8 @@ def calculate_daily_sales_metrics(date):
         sale_date__date=date,
         payment='PAID'
     ).aggregate(
-        total_sales=Coalesce(Sum('total_amount'), 0, output_field=DecimalField()),
-        count=Count('id')
+        total_sales=Coalesce(Sum('total_amount', output_field=DecimalField()), Decimal('0.00')),
+        count=Coalesce(Count('id', output_field=IntegerField()), 0)
     )
     
     # 2. คำนวณต้นทุนการขายสินค้า
@@ -50,9 +50,9 @@ def calculate_daily_sales_metrics(date):
         repair_date__date=date,
         status='COMPLETED'
     ).aggregate(
-        total_repairs_revenue=Coalesce(Sum('total_amount'), 0, output_field=DecimalField()),
-        total_parts_cost=Coalesce(Sum('parts_cost_total'), 0, output_field=DecimalField()),
-        repairs_completed_count=Count('id'),
+        total_repairs_revenue=Coalesce(Sum('total_amount', output_field=DecimalField()), Decimal('0.00')),
+        total_parts_cost=Coalesce(Sum('parts_cost_total', output_field=DecimalField()), Decimal('0.00')),
+        repairs_completed_count=Coalesce(Count('id', output_field=IntegerField()), 0),
     )
     
     # คำนวณกำไรจากงานซ่อม
@@ -62,7 +62,7 @@ def calculate_daily_sales_metrics(date):
     # Top 5 งานซ่อมที่ทำบ่อย/ทำเงินสูงสุด
     top_repairs_qs = RepairJob.objects.filter(repair_date__date=date, status='COMPLETED')\
         .values('job_name')\
-        .annotate(count=Count('id'), amount=Sum('total_amount'))\
+        .annotate(count=Coalesce(Count('id', output_field=IntegerField()), 0), amount=Coalesce(Sum('total_amount', output_field=DecimalField()), Decimal('0.00')))\
         .order_by('-amount', '-count')[:5]
     top_repairs = [
         {'name': r['job_name'], 'count': r['count'], 'amount': r['amount']} for r in top_repairs_qs
@@ -210,3 +210,79 @@ def calculate_comparison_with_previous(summary, previous_summary):
         'repairs_count_change': repairs_count_change,
         'repairs_count_change_percent': repairs_count_change_percent,
     }
+
+
+def get_monthly_summary_live(month=None, months_back=6):
+    """
+    สรุปข้อมูลรายเดือนแบบ live จาก DailySummary
+    - ถ้า month (str: 'YYYY-MM') ระบุ จะคืน dict ของเดือนนั้น
+    - ถ้าไม่ระบุ จะคืน dict ของหลายเดือนย้อนหลัง (key=month 'YYYY-MM')
+    """
+    from collections import OrderedDict
+    from datetime import date
+    today = timezone.now().date()
+    summaries = OrderedDict()
+
+    def month_range(dt):
+        return dt.replace(day=1)
+
+    if month:
+        # สรุปเฉพาะเดือนที่ระบุ
+        year, m = map(int, month.split('-'))
+        start = date(year, m, 1)
+        if m == 12:
+            end = date(year+1, 1, 1)
+        else:
+            end = date(year, m+1, 1)
+        qs = DailySummary.objects.filter(date__gte=start, date__lt=end)
+        agg = qs.aggregate(
+            total_sales_revenue=Coalesce(Sum('total_sales_revenue', output_field=DecimalField()), Decimal('0.00')),
+            total_sales_cost=Coalesce(Sum('total_sales_cost', output_field=DecimalField()), Decimal('0.00')),
+            total_sales_profit=Coalesce(Sum('total_sales_profit', output_field=DecimalField()), Decimal('0.00')),
+            sales_count=Coalesce(Sum('sales_count', output_field=IntegerField()), 0),
+            total_repairs_revenue=Coalesce(Sum('total_repairs_revenue', output_field=DecimalField()), Decimal('0.00')),
+            total_parts_cost=Coalesce(Sum('total_parts_cost', output_field=DecimalField()), Decimal('0.00')),
+            total_repairs_profit=Coalesce(Sum('total_repairs_profit', output_field=DecimalField()), Decimal('0.00')),
+            repairs_completed_count=Coalesce(Sum('repairs_completed_count', output_field=IntegerField()), 0),
+        )
+        agg['total_revenue'] = agg['total_sales_revenue'] + agg['total_repairs_revenue']
+        agg['total_profit'] = agg['total_sales_profit'] + agg['total_repairs_profit']
+        agg['month'] = month
+        return agg
+    else:
+        # สรุปย้อนหลังหลายเดือน (default 6 เดือน) + รวมเดือนปัจจุบันเป็นเดือนแรก
+        from collections import OrderedDict
+        summaries = OrderedDict()
+        today = timezone.now().date()
+        months = []
+        current_month = today.replace(day=1)
+        months.append(current_month)
+        for i in range(1, months_back):
+            prev_month = (current_month - timedelta(days=1)).replace(day=1)
+            months.append(prev_month)
+            current_month = prev_month
+        # วนลูปตาม months (เรียงจากปัจจุบัน -> ย้อนหลัง)
+        for ref_month in months:
+            month_str = ref_month.strftime('%Y-%m')
+            year, m = ref_month.year, ref_month.month
+            if m == 12:
+                end = date(year+1, 1, 1)
+            else:
+                end = date(year, m+1, 1)
+            qs = DailySummary.objects.filter(date__gte=ref_month, date__lt=end)
+            agg = qs.aggregate(
+                total_sales_revenue=Coalesce(Sum('total_sales_revenue', output_field=DecimalField()), Decimal('0.00')),
+                total_sales_cost=Coalesce(Sum('total_sales_cost', output_field=DecimalField()), Decimal('0.00')),
+                total_sales_profit=Coalesce(Sum('total_sales_profit', output_field=DecimalField()), Decimal('0.00')),
+                sales_count=Coalesce(Sum('sales_count', output_field=IntegerField()), 0),
+                total_repairs_revenue=Coalesce(Sum('total_repairs_revenue', output_field=DecimalField()), Decimal('0.00')),
+                total_parts_cost=Coalesce(Sum('total_parts_cost', output_field=DecimalField()), Decimal('0.00')),
+                total_repairs_profit=Coalesce(Sum('total_repairs_profit', output_field=DecimalField()), Decimal('0.00')),
+                repairs_completed_count=Coalesce(Sum('repairs_completed_count', output_field=IntegerField()), 0),
+            )
+            agg['total_revenue'] = agg['total_sales_revenue'] + agg['total_repairs_revenue']
+            agg['total_profit'] = agg['total_sales_profit'] + agg['total_repairs_profit']
+            agg['month'] = month_str
+            summaries[ref_month] = agg
+        # สร้าง OrderedDict: key=month_str, value=agg
+        return OrderedDict((v['month'], v) for k, v in summaries.items())

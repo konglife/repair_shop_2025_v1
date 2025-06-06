@@ -27,6 +27,42 @@ Follow these steps to set up the project locally for development:
 ### 1. Clone the repository
 
 ```bash
+
+## การรันคำสั่งสรุปรายวันและรายเดือน (DEV)
+
+สำหรับนักพัฒนา/ทดสอบ สามารถสร้างหรืออัปเดตข้อมูลสรุปรายวันและรายเดือนเพื่อให้ Dashboard แสดงข้อมูลที่ถูกต้องได้ดังนี้:
+
+### สรุปรายวัน (Daily Summary)
+
+สร้างหรืออัปเดตข้อมูลสรุปรายวัน:
+```bash
+python manage.py generate_daily_summary --date=YYYY-MM-DD --force
+```
+- `--date=YYYY-MM-DD` : ระบุวันที่ที่ต้องการสร้าง/อัปเดต (ตัวอย่าง: `--date=2025-06-06`)
+- `--force` : (ไม่บังคับ) ใช้ถ้าต้องการบังคับให้สร้างใหม่แม้จะมีข้อมูลเดิม
+- ถ้าไม่ระบุ `--date` จะสร้างของเมื่อวานให้อัตโนมัติ
+
+ตัวอย่าง:
+```bash
+python manage.py generate_daily_summary --date=2025-06-06 --force
+```
+
+### สรุปรายเดือน (Monthly Summary)
+
+สร้างหรืออัปเดตข้อมูลสรุปรายเดือน:
+```bash
+python manage.py generate_monthly_summary --month=YYYY-MM --force
+```
+- `--month=YYYY-MM` : ระบุเดือนที่ต้องการสร้าง/อัปเดต (ตัวอย่าง: `--month=2025-05`)
+- `--months-back=N` : (ไม่บังคับ) สร้างย้อนหลัง N เดือน (default=1)
+- `--force` : (ไม่บังคับ) ใช้ถ้าต้องการบังคับให้สร้างใหม่แม้จะมีข้อมูลเดิม
+- ถ้าไม่ระบุ `--month` จะสร้างของเดือนก่อนหน้าให้อัตโนมัติ
+
+ตัวอย่าง:
+```bash
+python manage.py generate_monthly_summary --month=2025-05 --force
+```
+
 git clone https://github.com/konglife/repair_shop_2025_v1.git
 cd repair_shop_2025_v1
 ```
