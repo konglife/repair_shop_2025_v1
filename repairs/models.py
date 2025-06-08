@@ -1,8 +1,9 @@
 # repairs/models.py
-from django.db import models
+from django.db import models, transaction
 from customers.models import Customer
 from inventory.models import Product
-from repairs.utils.cost_calculation import calculate_historical_weighted_average_cost, update_repair_job_costs
+from repairs.utils.cost_calculation import update_repair_job_costs
+from . import services
 
 # งานซ่อมหลัก
 class RepairJob(models.Model):
@@ -29,12 +30,14 @@ class RepairJob(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def update_parts_cost(self):
+        """Update the parts cost totals for this repair job."""
         update_repair_job_costs(self)
 
     def save(self, *args, **kwargs):
-        # คำนวณ total_amount ทุกครั้งก่อนบันทึก
-        self.total_amount = self.labor_charge + self.parts_cost_total
-        super(RepairJob, self).save(*args, **kwargs)
+        """Persist the repair job after calculating its total amount."""
+        with transaction.atomic():
+            self.total_amount = services.calculate_repair_total(self)
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Repair Job for {self.customer.name}"
@@ -48,8 +51,10 @@ class UsedPart(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        self.cost_price_per_unit = calculate_historical_weighted_average_cost(self.product)
-        super(UsedPart, self).save(*args, **kwargs)
+        """Persist the used part with up-to-date cost information."""
+        with transaction.atomic():
+            services.assign_used_part_cost(self)
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name} for {self.repair_job.job_name}"
