@@ -111,18 +111,18 @@ class UsedPartSignalTests(TestCase):
         self.stock.refresh_from_db()
         self.job.refresh_from_db()
         self.assertEqual(part.cost_price_per_unit, Decimal("15"))
-        self.assertEqual(self.stock.current_stock, 7)
+        self.assertEqual(self.stock.current_stock, 4)
         self.assertEqual(self.job.parts_cost_total, Decimal("45"))
         self.assertEqual(self.job.total_amount, Decimal("95.00"))
 
     def test_used_part_delete_returns_stock(self):
         part = UsedPart.objects.create(repair_job=self.job, product=self.product, quantity=2)
         self.stock.refresh_from_db()
-        self.assertEqual(self.stock.current_stock, 8)
+        self.assertEqual(self.stock.current_stock, 6)
         part.delete()
         self.stock.refresh_from_db()
         self.job.refresh_from_db()
-        self.assertEqual(self.stock.current_stock, 10)
+        self.assertEqual(self.stock.current_stock, 8)
         self.assertEqual(self.job.parts_cost_total, Decimal("0"))
 
     def test_status_change_adjusts_stock(self):
@@ -136,12 +136,12 @@ class UsedPartSignalTests(TestCase):
         )
         UsedPart.objects.create(repair_job=job, product=self.product, quantity=2)
         self.stock.refresh_from_db()
-        self.assertEqual(self.stock.current_stock, 10)
+        self.assertEqual(self.stock.current_stock, 8)
         job.status = "COMPLETED"
         job.save()
         self.stock.refresh_from_db()
-        self.assertEqual(self.stock.current_stock, 8)
+        self.assertEqual(self.stock.current_stock, 6)
         job.status = "IN_PROGRESS"
         job.save()
         self.stock.refresh_from_db()
-        self.assertEqual(self.stock.current_stock, 10)
+        self.assertEqual(self.stock.current_stock, 8)

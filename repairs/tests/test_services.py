@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from customers.models import Customer
-from inventory.models import Category, Unit, Product, Supplier, Purchase
+from inventory.models import Category, Unit, Product, Supplier, Purchase, Stock
 from repairs.models import RepairJob, UsedPart
 from repairs import services
 
@@ -48,6 +48,7 @@ class ServiceLayerTests(TestCase):
             repair_date=timezone.now(),
             description="d",
             labor_charge=Decimal("0"),
+            status="IN_PROGRESS",
         )
         part = UsedPart(repair_job=job, product=self.product, quantity=2)
         services.assign_used_part_cost(part)
@@ -62,6 +63,7 @@ class ServiceLayerTests(TestCase):
             repair_date=timezone.now(),
             description="d",
             labor_charge=Decimal("0"),
+            status="IN_PROGRESS",
         )
         part = UsedPart(repair_job=job, product=self.product, quantity=0)
         services.assign_used_part_cost(part)
@@ -69,15 +71,49 @@ class ServiceLayerTests(TestCase):
         self.assertEqual(part.total_cost, Decimal("0"))
 
     def test_assign_used_part_cost_no_history(self):
+        # Create stock without any purchase history
+        Stock.objects.create(product=self.product, current_stock=3)
         job = RepairJob.objects.create(
             job_name="Fix",
             customer=self.customer,
             repair_date=timezone.now(),
             description="d",
             labor_charge=Decimal("0"),
+            status="IN_PROGRESS",
         )
         part = UsedPart(repair_job=job, product=self.product, quantity=1)
         services.assign_used_part_cost(part)
         self.assertEqual(part.cost_price_per_unit, Decimal("0"))
         self.assertEqual(part.total_cost, Decimal("0"))
+
+    def test_used_part_save_reduces_stock(self):
+        self.create_purchase(Decimal("10"), 5)
+        stock = Stock.objects.get(product=self.product)
+        job = RepairJob.objects.create(
+            job_name="Fix",
+            customer=self.customer,
+            repair_date=timezone.now(),
+            description="d",
+            labor_charge=Decimal("0"),
+            status="IN_PROGRESS",
+        )
+        UsedPart.objects.create(repair_job=job, product=self.product, quantity=2)
+        stock.refresh_from_db()
+        self.assertEqual(stock.current_stock, 3)
+
+    def test_used_part_save_insufficient_stock(self):
+        self.create_purchase(Decimal("10"), 1)
+        stock = Stock.objects.get(product=self.product)
+        job = RepairJob.objects.create(
+            job_name="Fix",
+            customer=self.customer,
+            repair_date=timezone.now(),
+            description="d",
+            labor_charge=Decimal("0"),
+            status="IN_PROGRESS",
+        )
+        with self.assertRaises(ValueError):
+            UsedPart.objects.create(repair_job=job, product=self.product, quantity=5)
+        stock.refresh_from_db()
+        self.assertEqual(stock.current_stock, 1)
 
