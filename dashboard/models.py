@@ -36,8 +36,14 @@ class MonthlySummary(models.Model):
 
     @transaction.atomic
     def save(self, *args, **kwargs):
-        # preserve original logic exactly
-        self.total_revenue, self.total_profit = calculate_monthly_summary(self.year, self.month)
+        # ensure year and month are int for calculation
+        year = int(self.year)
+        # self.month is CharField (format 'YYYY-MM'), extract month part
+        if isinstance(self.month, str) and '-' in self.month:
+            month = int(self.month.split('-')[1])
+        else:
+            month = int(self.month)
+        self.total_revenue, self.total_profit = calculate_monthly_summary(year, month)
         super().save(*args, **kwargs)
 
     def __str__(self):
