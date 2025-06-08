@@ -16,14 +16,15 @@ def pre_save_sale_item_quantity(sender, instance, **kwargs):
 
 @receiver(post_save, sender=SaleItem)
 def post_save_sale_item_stock_adjustment(sender, instance, created, **kwargs):
-    stock = instance.product.stocks.first()
-    if stock:
-        if created: # New SaleItem created
-            stock.current_stock -= instance.quantity
-        else: # Existing SaleItem updated
-            quantity_difference = instance.quantity - instance._old_quantity
-            stock.current_stock -= quantity_difference
-        stock.save()
+    if not getattr(instance, '_skip_post_save_stock_update', False):
+        stock = instance.product.stocks.first()
+        if stock:
+            if created:  # New SaleItem created
+                stock.current_stock -= instance.quantity
+            else:  # Existing SaleItem updated
+                quantity_difference = instance.quantity - instance._old_quantity
+                stock.current_stock -= quantity_difference
+            stock.save()
 
     # After stock adjustment, update the total amount of the associated Sale
     # This ensures the Sale's total is correct immediately after its SaleItems are saved
