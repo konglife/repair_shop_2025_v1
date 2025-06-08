@@ -1,5 +1,7 @@
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
+
+from .services import calculate_daily_summary, calculate_monthly_summary
 
 # Create your models here.
 
@@ -32,10 +34,10 @@ class MonthlySummary(models.Model):
         verbose_name_plural = "Monthly Summaries"
         ordering = ['-month']
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
-        # คำนวณ total_revenue และ total_profit อัตโนมัติ
-        self.total_revenue = self.total_sales_revenue + self.total_repairs_revenue
-        self.total_profit = self.total_sales_profit + self.total_repairs_profit
+        # preserve original logic exactly
+        self.total_revenue, self.total_profit = calculate_monthly_summary(self.year, self.month)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -67,11 +69,10 @@ class DailySummary(models.Model):
         verbose_name_plural = "Daily Summaries"
         ordering = ['-date'] # เรียงลำดับตามวันที่ล่าสุดก่อน
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
-        # คำนวณ total_revenue อัตโนมัติ
-        self.total_revenue = self.total_sales_revenue + self.total_repairs_revenue
-        # คำนวณ total_profit อัตโนมัติ
-        self.total_profit = self.total_sales_profit + self.total_repairs_profit
+        # preserve original logic exactly
+        self.total_revenue, self.total_profit = calculate_daily_summary(self.date)
         super().save(*args, **kwargs)
 
     def __str__(self):
