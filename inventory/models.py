@@ -1,6 +1,8 @@
 # inventory/models.py
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
+
+from .services import calculate_purchase_total, update_stock_after_purchase
 
 # ซัพพลายเออร์
 class Supplier(models.Model):
@@ -79,9 +81,16 @@ class Purchase(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
-        self.total_price = self.quantity * self.price
-        super(Purchase, self).save(*args, **kwargs)
+        # preserve original logic by delegating to service layer
+        is_new = self.pk is None
+        self.total_price = calculate_purchase_total(self)
+        self._skip_post_save_stock_update = True
+        super().save(*args, **kwargs)
+        del self._skip_post_save_stock_update
+        if is_new:
+            update_stock_after_purchase(self)
 
     def __str__(self):
         return f"Purchase of {self.product.name} from {self.supplier.name}"
