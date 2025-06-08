@@ -1,7 +1,8 @@
-from django.db import models
+from django.db import models, transaction
 from customers.models import Customer
 from inventory.models import Product
 from django.utils import timezone
+from .services import calculate_sale_item_price, update_stock_after_sale
 
 # รายการสินค้าที่ขาย
 class SaleItem(models.Model):
@@ -14,11 +15,14 @@ class SaleItem(models.Model):
     def total_price(self):
         return self.quantity * self.price
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
         # ดึงราคาจาก Product อัตโนมัติ
-        self.price = self.product.selling_price
-
-        super(SaleItem, self).save(*args, **kwargs)
+        self.price = calculate_sale_item_price(self)
+        self._skip_post_save_stock_update = True
+        super().save(*args, **kwargs)
+        del self._skip_post_save_stock_update
+        update_stock_after_sale(self)
 
 
     def __str__(self):
