@@ -60,6 +60,9 @@ def _handle_stock_and_cost_on_purchase_update(old_purchase, new_purchase):
 
 @receiver(post_save, sender=Purchase)
 def update_stock_after_purchase(sender, instance, created, **kwargs):
+    if getattr(instance, '_skip_post_save_stock_update', False):
+        return
+
     product = instance.product
 
     # อัปเดต Stock เมื่อมีการสร้าง Purchase ใหม่และสถานะเป็น RECEIVED
