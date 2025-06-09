@@ -34,8 +34,23 @@ class RepairJob(models.Model):
 
     @transaction.atomic
     def save(self, *args, **kwargs):
-        # คงไว้ซึ่งตรรกะเดิมโดยเรียก calculate_repair_total
-        self.total_amount = calculate_repair_total(self)
+        from .services import calculate_parts_cost, compute_labor_from_total
+
+        # 1) Calculate total parts cost
+        parts = self.used_parts.all() if self.pk else []
+        parts_cost = sum(
+            calculate_parts_cost(up.product, up.quantity)
+            for up in parts
+        )
+        # 2) User-supplied total_amount remains unchanged
+        # 3) Compute labor_charge
+        self.labor_charge = compute_labor_from_total(self.total_amount, parts_cost)
+        # 4) Store parts_cost_total
+        self.parts_cost_total = parts_cost
+        if "update_fields" in kwargs and kwargs["update_fields"]:
+            fields = set(kwargs["update_fields"])
+            fields.update({"parts_cost_total", "labor_charge"})
+            kwargs["update_fields"] = list(fields)
         super().save(*args, **kwargs)
 
     def __str__(self):
