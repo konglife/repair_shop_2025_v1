@@ -3,7 +3,12 @@ from django.db import models, transaction
 from customers.models import Customer
 from inventory.models import Product
 from repairs.utils.cost_calculation import update_repair_job_costs
-from .services import calculate_repair_total, apply_used_part_cost
+from .services import (
+    calculate_repair_total,
+    apply_used_part_cost,
+    calculate_parts_cost,
+    compute_labor_from_total,
+)
 
 # งานซ่อมหลัก
 class RepairJob(models.Model):
@@ -34,8 +39,13 @@ class RepairJob(models.Model):
 
     @transaction.atomic
     def save(self, *args, **kwargs):
-        # คงไว้ซึ่งตรรกะเดิมโดยเรียก calculate_repair_total
-        self.total_amount = calculate_repair_total(self)
+        parts_cost = sum(
+            calculate_parts_cost(up.product, up.quantity)
+            for up in self.used_parts.all()
+        )
+
+        self.labor_charge = compute_labor_from_total(self.total_amount, parts_cost)
+        self.parts_cost_total = parts_cost
         super().save(*args, **kwargs)
 
     def __str__(self):

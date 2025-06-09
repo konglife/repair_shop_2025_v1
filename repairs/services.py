@@ -41,3 +41,16 @@ def apply_used_part_cost(used_part: "UsedPart") -> Decimal:
     cost_per_unit = calculate_historical_weighted_average_cost(used_part.product)
     used_part.cost_price_per_unit = cost_per_unit
     return cost_per_unit * used_part.quantity
+
+
+def calculate_parts_cost(product, quantity=1):
+    """Return Decimal: weighted-average cost per unit * quantity."""
+    from .utils.cost_calculation import calculate_historical_weighted_average_cost
+
+    unit_cost = calculate_historical_weighted_average_cost(product)
+    return unit_cost * quantity
+
+
+def compute_labor_from_total(total_amount, parts_cost):
+    """Return Decimal: labor charge = total_amount - parts_cost."""
+    return total_amount - parts_cost

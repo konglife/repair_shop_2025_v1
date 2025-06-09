@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from customers.models import Customer
 from inventory.models import Category, Unit, Product, Supplier, Stock, Purchase
 from repairs.models import RepairJob, UsedPart
+from repairs.forms import RepairJobForm
 from repairs.utils.cost_calculation import calculate_historical_weighted_average_cost
 
 
@@ -50,16 +51,17 @@ class RepairJobModelTests(TestCase):
             name="Cust", phone="0", email="c@example.com", address="addr"
         )
 
-    def test_save_calculates_total_amount(self):
+    def test_save_preserves_total_amount_and_computes_labor(self):
         job = RepairJob.objects.create(
             job_name="Fix",
             customer=self.customer,
             repair_date=timezone.now(),
             description="d",
-            labor_charge=Decimal("100.00"),
-            parts_cost_total=Decimal("20.00"),
+            total_amount=Decimal("50.00"),
         )
-        self.assertEqual(job.total_amount, Decimal("120.00"))
+        job.refresh_from_db()
+        self.assertEqual(job.total_amount, Decimal("50.00"))
+        self.assertEqual(job.labor_charge, Decimal("50.00"))
 
 
 class UsedPartSignalTests(TestCase):
@@ -101,7 +103,7 @@ class UsedPartSignalTests(TestCase):
             customer=self.customer,
             repair_date=timezone.now(),
             description="d",
-            labor_charge=Decimal("50.00"),
+            total_amount=Decimal("95.00"),
             status="COMPLETED",
         )
 
@@ -114,6 +116,7 @@ class UsedPartSignalTests(TestCase):
         self.assertEqual(self.stock.current_stock, 7)
         self.assertEqual(self.job.parts_cost_total, Decimal("45"))
         self.assertEqual(self.job.total_amount, Decimal("95.00"))
+        self.assertEqual(self.job.labor_charge, Decimal("50.00"))
 
     def test_used_part_delete_returns_stock(self):
         part = UsedPart.objects.create(repair_job=self.job, product=self.product, quantity=2)
@@ -124,6 +127,7 @@ class UsedPartSignalTests(TestCase):
         self.job.refresh_from_db()
         self.assertEqual(self.stock.current_stock, 10)
         self.assertEqual(self.job.parts_cost_total, Decimal("0"))
+        self.assertEqual(self.job.labor_charge, Decimal("95.00"))
 
     def test_status_change_adjusts_stock(self):
         job = RepairJob.objects.create(
@@ -131,7 +135,7 @@ class UsedPartSignalTests(TestCase):
             customer=self.customer,
             repair_date=timezone.now(),
             description="d",
-            labor_charge=Decimal("0"),
+            total_amount=Decimal("30.00"),
             status="IN_PROGRESS",
         )
         UsedPart.objects.create(repair_job=job, product=self.product, quantity=2)
@@ -145,3 +149,70 @@ class UsedPartSignalTests(TestCase):
         job.save()
         self.stock.refresh_from_db()
         self.assertEqual(self.stock.current_stock, 10)
+
+
+class RepairJobComputationTests(TestCase):
+    def setUp(self):
+        self.category = Category.objects.create(name="Cat")
+        self.unit = Unit.objects.create(name="Unit")
+        self.product = Product.objects.create(
+            name="Prod",
+            category=self.category,
+            unit=self.unit,
+            selling_price=Decimal("100"),
+        )
+        self.supplier = Supplier.objects.create(name="Supp", contact_info="c")
+        Purchase.objects.create(
+            product=self.product,
+            quantity=1,
+            price=Decimal("15"),
+            supplier=self.supplier,
+            purchase_date=timezone.now(),
+            payment="PAID",
+            status="RECEIVED",
+        )
+        self.customer = Customer.objects.create(
+            name="Cust", phone="0", email="c@example.com", address="addr"
+        )
+
+    def test_total_equals_parts_cost(self):
+        job = RepairJob.objects.create(
+            job_name="Job1",
+            customer=self.customer,
+            repair_date=timezone.now(),
+            description="d",
+            total_amount=Decimal("15.00"),
+            status="IN_PROGRESS",
+        )
+        UsedPart.objects.create(repair_job=job, product=self.product, quantity=1)
+        job.refresh_from_db()
+        self.assertEqual(job.parts_cost_total, Decimal("15"))
+        self.assertEqual(job.labor_charge, Decimal("0"))
+
+    def test_total_greater_than_parts_cost(self):
+        job = RepairJob.objects.create(
+            job_name="Job2",
+            customer=self.customer,
+            repair_date=timezone.now(),
+            description="d",
+            total_amount=Decimal("50.00"),
+            status="IN_PROGRESS",
+        )
+        UsedPart.objects.create(repair_job=job, product=self.product, quantity=1)
+        job.refresh_from_db()
+        self.assertEqual(job.labor_charge, Decimal("35.00"))
+
+    def test_total_less_than_parts_cost_raises_validation(self):
+        form = RepairJobForm(
+            data={
+                "job_name": "Job3",
+                "customer": self.customer.pk,
+                "repair_date": timezone.now(),
+                "description": "d",
+                "total_amount": Decimal("10.00"),
+                "status": "IN_PROGRESS",
+                "payment": "UNPAID",
+            },
+            used_parts=[{"product": self.product, "quantity": 1}],
+        )
+        self.assertFalse(form.is_valid())
