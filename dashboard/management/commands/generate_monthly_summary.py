@@ -68,6 +68,10 @@ class Command(BaseCommand):
             total_revenue = agg['total_sales_revenue'] + agg['total_repairs_revenue']
             total_profit = agg['total_sales_profit'] + agg['total_repairs_profit']
 
+            repair_profit_percent = Decimal('0.00')
+            if agg['total_repairs_revenue'] > 0:
+                repair_profit_percent = (agg['total_repairs_profit'] / agg['total_repairs_revenue']) * Decimal('100.00')
+
             # Create or update MonthlySummary
             summary, created = MonthlySummary.objects.update_or_create(
                 month=month_label,
@@ -83,6 +87,7 @@ class Command(BaseCommand):
                     'repairs_completed_count': agg['repairs_completed_count'],
                     'total_revenue': total_revenue,
                     'total_profit': total_profit,
+                    'repair_profit_percent': repair_profit_percent,
                 }
             )
             msg = 'สร้างใหม่' if created else 'อัปเดต'
@@ -91,3 +96,5 @@ class Command(BaseCommand):
             self.stdout.write(f'  - กำไรรวม: {total_profit:,.2f} บาท (ขาย: {agg["total_sales_profit"]:,.2f}, ซ่อม: {agg["total_repairs_profit"]:,.2f})')
             self.stdout.write(f'  - จำนวนขาย: {agg["sales_count"]} | งานซ่อมเสร็จสิ้น: {agg["repairs_completed_count"]}')
             self.stdout.write(f'  - ต้นทุนสินค้า: {agg["total_sales_cost"]:,.2f} | ต้นทุนอะไหล่ซ่อม: {agg["total_parts_cost"]:,.2f}')
+            self.stdout.write(f'  - % กำไรงานซ่อม: {repair_profit_percent:,.2f}%')
+
