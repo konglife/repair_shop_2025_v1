@@ -1,9 +1,10 @@
 # repairs/models.py
+from decimal import Decimal
 from django.db import models, transaction
+from django.db.models import Sum, F
 from customers.models import Customer
 from inventory.models import Product
-from repairs.utils.cost_calculation import update_repair_job_costs
-from .services import calculate_repair_total, apply_used_part_cost
+from .services import apply_used_part_cost
 
 # งานซ่อมหลัก
 class RepairJob(models.Model):
@@ -20,9 +21,9 @@ class RepairJob(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='repair_jobs')
     repair_date = models.DateTimeField()
     description = models.TextField()
-    labor_charge = models.DecimalField(max_digits=10, decimal_places=2)
+    labor_charge = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
     parts_cost_total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0) # now editable, user input
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='IN_PROGRESS')
     notes = models.TextField(blank=True, null=True)
     payment = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='UNPAID')
@@ -30,12 +31,16 @@ class RepairJob(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def update_parts_cost(self):
-        update_repair_job_costs(self)
+        """Recalculates and updates the parts_cost_total based on associated UsedPart instances."""
+        total_cost = self.used_parts.aggregate(
+            total=Sum(F('quantity') * F('cost_price_per_unit'), output_field=models.DecimalField())
+        )['total'] or Decimal('0.00')
+        self.parts_cost_total = total_cost
 
-    @transaction.atomic
     def save(self, *args, **kwargs):
-        # คงไว้ซึ่งตรรกะเดิมโดยเรียก calculate_repair_total
-        self.total_amount = calculate_repair_total(self)
+        # Recalculate labor_charge before saving.
+        if self.total_amount is not None and self.parts_cost_total is not None:
+            self.labor_charge = self.total_amount - self.parts_cost_total
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -49,11 +54,9 @@ class UsedPart(models.Model):
     cost_price_per_unit = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    @transaction.atomic
     def save(self, *args, **kwargs):
-        # คงไว้ซึ่งตรรกะเดิมโดยเรียก apply_used_part_cost
-        total_cost = apply_used_part_cost(self)
-        self.cost_price_per_unit = total_cost / self.quantity
+        # apply_used_part_cost sets the cost_price_per_unit on this instance.
+        apply_used_part_cost(self)
         super().save(*args, **kwargs)
 
     def __str__(self):

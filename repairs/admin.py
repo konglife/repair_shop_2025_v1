@@ -15,12 +15,16 @@ class RepairJobAdmin(admin.ModelAdmin):
     list_filter = ('status', 'payment', 'repair_date', 'updated_at')
     ordering = ('-updated_at',)
     inlines = [UsedPartInline]
-    readonly_fields = ('total_amount', 'parts_cost_total',)
+    readonly_fields = ('parts_cost_total',)
+    fields = ('job_name', 'customer', 'repair_date', 'description', 'status', 'notes', 'payment', 'total_amount', 'parts_cost_total')
 
-    def save_model(self, request, obj, form, change):
-        # คำนวณค่า total_amount ก่อนบันทึก
-        obj.total_amount = obj.labor_charge + obj.parts_cost_total
-        super().save_model(request, obj, form, change)
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        # หลังจากบันทึก UsedPart inline แล้ว ให้เรียก update_parts_cost เพื่ออัปเดต parts_cost_total
+        form.instance.update_parts_cost()
+        # บันทึก RepairJob อีกครั้งเพื่อให้ labor_charge ถูกคำนวณใหม่ด้วย parts_cost_total ที่อัปเดตแล้ว
+        form.instance.save()
+
 
 # การตั้งค่าหน้า Admin สำหรับ UsedPart
 class UsedPartAdmin(admin.ModelAdmin):

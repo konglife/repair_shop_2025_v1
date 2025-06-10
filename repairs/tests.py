@@ -46,20 +46,32 @@ class CostCalculationTests(TestCase):
 
 class RepairJobModelTests(TestCase):
     def setUp(self):
-        self.customer = Customer.objects.create(
-            name="Cust", phone="0", email="c@example.com", address="addr"
-        )
+        self.customer = Customer.objects.create(name="Test Customer", phone="123", email="test@example.com")
 
-    def test_save_calculates_total_amount(self):
+    def test_save_calculates_labor_charge(self):
+        # Test that labor_charge is calculated correctly on save based on total_amount and parts_cost_total
         job = RepairJob.objects.create(
-            job_name="Fix",
+            job_name="Test Job",
             customer=self.customer,
             repair_date=timezone.now(),
-            description="d",
-            labor_charge=Decimal("100.00"),
-            parts_cost_total=Decimal("20.00"),
+            description="Test Description",
+            total_amount=Decimal("120.00"), # User inputs total_amount
+            parts_cost_total=Decimal("70.00"),
+            status="IN_PROGRESS",
         )
-        self.assertEqual(job.total_amount, Decimal("120.00"))
+        job.refresh_from_db()
+        # labor_charge should be total_amount - parts_cost_total
+        self.assertEqual(job.labor_charge, Decimal("50.00"))
+
+    def test_labor_charge_is_editable_false(self):
+        # Test that labor_charge is not editable
+        field = RepairJob._meta.get_field('labor_charge')
+        self.assertFalse(field.editable)
+
+    def test_total_amount_is_editable_true(self):
+        # Test that total_amount is editable
+        field = RepairJob._meta.get_field('total_amount')
+        self.assertTrue(field.editable)
 
 
 class UsedPartSignalTests(TestCase):
@@ -101,7 +113,7 @@ class UsedPartSignalTests(TestCase):
             customer=self.customer,
             repair_date=timezone.now(),
             description="d",
-            labor_charge=Decimal("50.00"),
+            total_amount=Decimal("100.00"), # ตั้งค่า total_amount แทน labor_charge
             status="COMPLETED",
         )
 
@@ -110,10 +122,16 @@ class UsedPartSignalTests(TestCase):
         part.refresh_from_db()
         self.stock.refresh_from_db()
         self.job.refresh_from_db()
-        self.assertEqual(part.cost_price_per_unit, Decimal("15"))
+        # ตรวจสอบ cost_price_per_unit ควรเป็น average_cost จาก Stock (15 บาท)
+        self.assertEqual(part.cost_price_per_unit, Decimal("15.00"))
+        # ตรวจสอบ current_stock ควรลดลง 3 ชิ้น (จาก 10 เหลือ 7)
         self.assertEqual(self.stock.current_stock, 7)
-        self.assertEqual(self.job.parts_cost_total, Decimal("45"))
-        self.assertEqual(self.job.total_amount, Decimal("95.00"))
+        # ตรวจสอบ parts_cost_total ควรเป็น 3 ชิ้น * 15 บาท = 45 บาท
+        self.assertEqual(self.job.parts_cost_total, Decimal("45.00"))
+        # ตรวจสอบ labor_charge ควรเป็น total_amount (100) - parts_cost_total (45) = 55 บาท
+        self.assertEqual(self.job.labor_charge, Decimal("55.00"))
+        # total_amount ถูกกำหนดไว้ใน setup
+        self.assertEqual(self.job.total_amount, Decimal("100.00"))
 
     def test_used_part_delete_returns_stock(self):
         part = UsedPart.objects.create(repair_job=self.job, product=self.product, quantity=2)

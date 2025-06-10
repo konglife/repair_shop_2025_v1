@@ -3,30 +3,17 @@ from typing import TYPE_CHECKING
 
 from django.db import transaction
 
-from repairs.utils.cost_calculation import calculate_historical_weighted_average_cost
+from inventory.models import Stock
 
 if TYPE_CHECKING:
     from .models import RepairJob, UsedPart
 
 
-def calculate_repair_total(repair_job: "RepairJob") -> Decimal:
-    """Calculate the total amount for a repair job.
-
-    Parameters
-    ----------
-    repair_job : RepairJob
-        The repair job instance for which to calculate the total.
-
-    Returns
-    -------
-    Decimal
-        Sum of ``labor_charge`` and ``parts_cost_total``.
-    """
-    return repair_job.labor_charge + repair_job.parts_cost_total
-
+# calculate_repair_total is no longer needed under the new logic, as total_amount is set by user and labor_charge is calculated as total_amount - parts_cost_total.
+# This function has been removed.
 
 def apply_used_part_cost(used_part: "UsedPart") -> Decimal:
-    """Assign weighted-average cost to a used part and return its total cost.
+    """Assign weighted-average cost from Stock to a used part and return its total cost.
 
     Parameters
     ----------
@@ -38,6 +25,12 @@ def apply_used_part_cost(used_part: "UsedPart") -> Decimal:
     Decimal
         The total cost for this part (cost per unit multiplied by quantity).
     """
-    cost_per_unit = calculate_historical_weighted_average_cost(used_part.product)
+    try:
+        stock = Stock.objects.get(product=used_part.product)
+        cost_per_unit = stock.average_cost
+    except Stock.DoesNotExist:
+        # If no stock record, default cost to 0. This case should be rare.
+        cost_per_unit = Decimal('0.00')
+
     used_part.cost_price_per_unit = cost_per_unit
     return cost_per_unit * used_part.quantity

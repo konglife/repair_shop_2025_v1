@@ -47,6 +47,5 @@ def update_repair_job_costs(repair_job):
     
     # อัปเดตค่าต้นทุนชิ้นส่วนในโมเดล
     repair_job.parts_cost_total = total_parts_cost
-    
-    # บันทึกเฉพาะฟิลด์ที่เกี่ยวข้อง
-    repair_job.save(update_fields=['parts_cost_total', 'total_amount'])
+    # บันทึก RepairJob เพื่อให้ค่า parts_cost_total ถูกบันทึกและ trigger การคำนวณ labor_charge
+    repair_job.save()
