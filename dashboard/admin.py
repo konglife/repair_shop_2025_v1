@@ -12,7 +12,6 @@ class DailySummaryAdmin(admin.ModelAdmin):
         'total_sales_cost',
         'total_sales_profit',
         'total_profit',
-        'total_labor_charge',
         'total_parts_cost',
         'sales_count',
         'repairs_completed_count',
@@ -56,7 +55,6 @@ class MonthlySummaryAdmin(admin.ModelAdmin):
         'total_sales_cost',
         'total_sales_profit',
         'total_profit',
-        'total_labor_charge',
         'total_parts_cost',
         'sales_count',
         'repairs_completed_count',
@@ -82,7 +80,6 @@ class MonthlySummaryAdmin(admin.ModelAdmin):
                 'total_sales_cost',
                 'total_sales_profit',
                 'total_profit',
-                'total_labor_charge',
                 'total_parts_cost',
                 'repair_profit_percent',
             )

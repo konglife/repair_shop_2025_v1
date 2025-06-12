@@ -79,12 +79,10 @@ class Command(BaseCommand):
         ).aggregate(
             total_repairs_revenue=Coalesce(Sum('total_amount'), 0, output_field=DecimalField()),
             total_parts_cost=Coalesce(Sum('parts_cost_total'), 0, output_field=DecimalField()),
-            total_labor_charge=Coalesce(Sum('labor_charge'), 0, output_field=DecimalField()),
             repairs_completed_count=Count('id')
         )
         total_repairs_revenue = repairs_data['total_repairs_revenue']
         total_parts_cost = repairs_data['total_parts_cost']
-        total_labor_charge = repairs_data['total_labor_charge']
         repairs_completed_count = repairs_data['repairs_completed_count']
 
         # คำนวณกำไรจากงานซ่อม
@@ -115,7 +113,7 @@ class Command(BaseCommand):
         summary.repairs_completed_count = repairs_completed_count
         summary.total_sales_cost = total_sales_cost
         summary.total_sales_profit = total_sales_profit
-        summary.total_labor_charge = total_labor_charge
+
         summary.total_parts_cost = total_parts_cost  # เพิ่มบันทึกต้นทุนอะไหล่ซ่อม
         summary.repair_profit_percent = repair_profit_percent
         summary.top_repairs = json.dumps(top_repairs, ensure_ascii=False)
@@ -135,7 +133,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  - กำไรจากการขาย: {summary.total_sales_profit} บาท")
         self.stdout.write(f"  - รายได้จากงานซ่อม: {summary.total_repairs_revenue} บาท")
         self.stdout.write(f"  - กำไรจากงานซ่อม: {summary.total_repairs_profit} บาท")
-        self.stdout.write(f"  - รายได้ค่าแรง: {summary.total_labor_charge} บาท")
+
         self.stdout.write(f"  - รายได้รวมทั้งหมด: {summary.total_revenue} บาท")
         self.stdout.write(f"  - กำไรรวมทั้งหมด: {summary.total_profit} บาท")
         self.stdout.write(f"  - จำนวนรายการขาย: {summary.sales_count} รายการ")

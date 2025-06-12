@@ -18,7 +18,6 @@ class MonthlySummary(models.Model):
     total_sales_cost = models.DecimalField(max_digits=14, decimal_places=2, default=0, help_text="ต้นทุนรวมของการขายสินค้า", verbose_name="ต้นทุนสินค้า")
     total_sales_profit = models.DecimalField(max_digits=14, decimal_places=2, default=0, help_text="กำไรรวมจากการขายสินค้า (รายรับขาย - ต้นทุนขาย)", verbose_name="กำไรจากการขายสินค้า")
     total_profit = models.DecimalField(max_digits=14, decimal_places=2, default=0, help_text="กำไรรวมทั้งหมด (ขาย+ซ่อม)", verbose_name="กำไรรวมทั้งหมด")
-    total_labor_charge = models.DecimalField(max_digits=14, decimal_places=2, default=0, help_text="ค่าแรงรวมจากงานซ่อม", verbose_name="รายได้ค่าแรง")
     total_parts_cost = models.DecimalField(max_digits=14, decimal_places=2, default=0, help_text="ต้นทุนอะไหล่รวมของงานซ่อม", verbose_name="ต้นทุนอะไหล่ซ่อม")
     sales_count = models.PositiveIntegerField(default=0, verbose_name="จำนวนรายการขาย")
     repairs_completed_count = models.PositiveIntegerField(default=0, verbose_name="จำนวนงานซ่อมเสร็จสิ้น")
@@ -53,7 +52,6 @@ class DailySummary(models.Model):
     total_sales_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="ต้นทุนรวมของการขายสินค้า", verbose_name="ต้นทุนสินค้า")
     total_sales_profit = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="กำไรรวมจากการขายสินค้า (รายรับขาย - ต้นทุนขาย)", verbose_name="กำไรจากการขายสินค้า")
     total_profit = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="กำไรรวมทั้งหมด (ขาย+ซ่อม)", verbose_name="กำไรรวมทั้งหมด")
-    total_labor_charge = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="ค่าแรงรวมจากงานซ่อม (สำหรับวิเคราะห์สัดส่วนค่าแรงและชิ้นส่วน)", verbose_name="รายได้ค่าแรง")
     total_parts_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="ต้นทุนอะไหล่รวมของงานซ่อม", verbose_name="ต้นทุนอะไหล่ซ่อม")
     # ฟิลด์เดิม
     sales_count = models.PositiveIntegerField(default=0, verbose_name="จำนวนรายการขาย")
