@@ -37,7 +37,7 @@ class StockAdmin(admin.ModelAdmin):
 
     def get_status(self, obj):
         return obj.get_status()  # เรียกใช้ฟังก์ชัน get_status() จาก Model
-    get_status.short_description = 'Stock Status'
+    get_status.short_description = 'สถานะสต็อก'
 
 # การสั่งซื้อสินค้า
 class PurchaseAdmin(admin.ModelAdmin):

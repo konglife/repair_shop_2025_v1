@@ -6,10 +6,10 @@ from .services import calculate_sale_item_price, update_stock_after_sale
 
 # รายการสินค้าที่ขาย
 class SaleItem(models.Model):
-    sale = models.ForeignKey('Sale', on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='sold_items')
-    quantity = models.PositiveIntegerField()
-    price = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
+    sale = models.ForeignKey('Sale', on_delete=models.CASCADE, related_name='items', verbose_name="การขาย")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='sold_items', verbose_name="สินค้า")
+    quantity = models.PositiveIntegerField(verbose_name="จำนวน")
+    price = models.DecimalField(max_digits=10, decimal_places=2, editable=False, verbose_name="ราคาต่อหน่วย")
 
     @property
     def total_price(self):
@@ -36,13 +36,13 @@ class Sale(models.Model):
         ('UNPAID', 'Unpaid'),
     ]
 
-    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, related_name='sales')
-    sale_date = models.DateTimeField(default=timezone.now)
-    note = models.TextField(blank=True, null=True)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, editable=False, default=0)
-    payment = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='UNPAID')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, related_name='sales', verbose_name="ลูกค้า")
+    sale_date = models.DateTimeField(default=timezone.now, verbose_name="วันที่ขาย")
+    note = models.TextField(blank=True, null=True, verbose_name="หมายเหตุ")
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, editable=False, default=0, verbose_name="ยอดรวม")
+    payment = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='UNPAID', verbose_name="การชำระเงิน")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="สร้างเมื่อ")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="อัปเดตเมื่อ")
 
     def calculate_total_amount(self):
         # คำนวณยอดรวมจาก SaleItem ทั้งหมดที่เชื่อมโยงกับการขายนี้

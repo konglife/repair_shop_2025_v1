@@ -17,18 +17,18 @@ class RepairJob(models.Model):
         ('UNPAID', 'Unpaid'),
     ]
 
-    job_name = models.CharField(max_length=255)
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='repair_jobs')
-    repair_date = models.DateTimeField()
-    description = models.TextField()
-    labor_charge = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
-    parts_cost_total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0) # now editable, user input
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='IN_PROGRESS')
-    notes = models.TextField(blank=True, null=True)
-    payment = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='UNPAID')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    job_name = models.CharField(max_length=255, verbose_name="ชื่องาน")
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='repair_jobs', verbose_name="ลูกค้า")
+    repair_date = models.DateTimeField(verbose_name="วันที่ซ่อม")
+    description = models.TextField(verbose_name="รายละเอียด")
+    labor_charge = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False, verbose_name="ค่าแรง")
+    parts_cost_total = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="ค่าอะไหล่")
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="รวมทั้งหมด") # now editable, user input
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='IN_PROGRESS', verbose_name="สถานะ")
+    notes = models.TextField(blank=True, null=True, verbose_name="หมายเหตุ")
+    payment = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='UNPAID', verbose_name="การชำระเงิน")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="สร้างเมื่อ")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="อัปเดตเมื่อ")
 
     def update_parts_cost(self):
         """Recalculates and updates the parts_cost_total based on associated UsedPart instances."""
@@ -48,11 +48,11 @@ class RepairJob(models.Model):
 
 # อะไหล่ที่ใช้ในงานซ่อม
 class UsedPart(models.Model):
-    repair_job = models.ForeignKey(RepairJob, on_delete=models.CASCADE, related_name='used_parts')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='used_in_repairs')
-    quantity = models.PositiveIntegerField()
-    cost_price_per_unit = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    repair_job = models.ForeignKey(RepairJob, on_delete=models.CASCADE, related_name='used_parts', verbose_name="งานซ่อม")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='used_in_repairs', verbose_name="อะไหล่")
+    quantity = models.PositiveIntegerField(verbose_name="จำนวน")
+    cost_price_per_unit = models.DecimalField(max_digits=10, decimal_places=2, default=0, editable=False, verbose_name="ราคาต่อหน่วย")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="สร้างเมื่อ")
 
     def save(self, *args, **kwargs):
         # apply_used_part_cost sets the cost_price_per_unit on this instance.

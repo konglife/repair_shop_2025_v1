@@ -3,7 +3,7 @@ from django.contrib import admin
 from .models import Customer
 
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'email', 'phone', 'created_at')  # ตัด profile_thumbnail ออก
+    list_display = ('id', 'name' , 'address' , 'email', 'phone', 'created_at')  # ตัด profile_thumbnail ออก
     search_fields = ('name', 'email', 'phone')  # เพิ่มฟังก์ชันการค้นหาตามชื่อ อีเมล และเบอร์โทรศัพท์
     list_filter = ('created_at',)  # เพิ่มตัวกรองตามวันที่สร้าง
     ordering = ('-created_at',)  # เรียงตามวันที่สร้างใหม่ล่าสุดก่อน
