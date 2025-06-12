@@ -26,7 +26,12 @@ SECRET_KEY = 'django-insecure-%z1@utq5=qdny&6qkt&1xfbyh&c-go5l09*0p+(y!2l&u=s0sh
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'konglife.pythonanywhere.com',
+    'www.konglife.pythonanywhere.com',  # ถ้าใช้งานผ่าน WWW ก็เพิ่มด้วย
+    'localhost',                       # สำหรับ dev ในเครื่อง
+    '127.0.0.1',
+]
 
 
 # Application definition

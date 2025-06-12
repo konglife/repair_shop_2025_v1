@@ -44,3 +44,6 @@ pip-delete-this-directory.txt
 *.tar.gz
 *.rar
 *.DS_Store
+
+# Ignore static files
+staticfiles/
